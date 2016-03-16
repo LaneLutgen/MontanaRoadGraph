@@ -3,6 +3,8 @@ Lane Lutgen
 CSCI 305 
 Lab #2
 
+***USING PYTHON 3.5***
+
 NOTES: Need to finish processing input, currently at option == 3
 """
 
@@ -10,6 +12,11 @@ NOTES: Need to finish processing input, currently at option == 3
 import re
 import sys
 
+"""
+This def is responsible for providing instructions to the user
+when the program is first executed after the graphs are created.
+It can be called multiple times by process_input if the user wants to perform multiple tasks
+"""
 def begin_program():
 	print ("Welcome to the Montana Road Network")
 	print ("Enter 1 to find to find total number of connections for a given city")
@@ -22,6 +29,11 @@ def begin_program():
 
 	process_input(int(option))
 
+"""
+This def will always be called by begin_program, it takes in an integer value
+that represents the user's choice of what task they want to perform on the 
+map database 
+"""
 def process_input(option):
 	if option == 1:
 		city = input("Please enter the name of the city: ")
@@ -29,8 +41,8 @@ def process_input(option):
 	elif option == 2:
 		start_city = input("Please enter starting location: ")
 		destination = input("Please enter destination: ")
-		has_connection = is_connected(start_city, destination)
-		if has_connection == True:
+		connection = is_connected(start_city, destination)
+		if connection == True:
 			print ("Direct connection found!")
 		else:
 			print ("No direct connection was found")
@@ -40,17 +52,32 @@ def process_input(option):
 		hops = input("Please enter maximum number of city connections (k-hops): ")
 		k_hop = has_khop_connection(start_city, destination, hops)
 		if k_hop == True:
-			p
+			print (hops, "-hop connection was found.")
+		else:
+			print (hops, "-hop connection was not found")
 	elif option == 4:
 		start_city = input("Please enter starting location:")
 		destination = input("Please enter destination:")
+		connected = has_connection(start_city, destination)
+		if connected == True:
+			print ("Indirect connection found!")
+		else:
+			print ("Connection was not found")
 	else:
 		print("Goodbye")
 		sys.exit()
 
+
+	go_again = input("Would you like to try something else? Y/N\n")
+	if go_again == "Y" or go_again == "y":
+		begin_program()
+	else:
+		process_input("N")
+
 """
 Reads the text file provided and creates a dictionary to be used
-as an adjacency matrix that represents the graph data structure
+as an adjacency matrix that represents the graph data structure.
+This def is run before user input is taken.
 """
 def create_dictionary():
 	with open("city1.txt") as city_file:
@@ -87,22 +114,36 @@ def create_dictionary():
 					pointer = 0
 
 
+"""
+Takes in a start location and finish location string and returns the 
+distance between those cities if a direct connection exists.
+"""
 def find_distance(start, finish):
 	try:
 		return int(dictionary[start][finish])
 	except:
 		return 0
 
+"""
+Determines if there is a direct connection between two cities represented by
+string inputs. If there is a value stored in the dictionary for the two city
+keys, then the connection exists, if we get a KeyError, that means that the connection
+does not exist.
+"""
 def is_connected(start, finish):
 	try:
 		dist = int(dictionary[start][finish])
-		if dist > 0:
+		if dist >= 0:
 			return True
 		else:
 			return False
 	except:
 		return False
 
+"""
+Takes in a city and determines the total number of connections to that given
+city within the database. This includes both incoming and outgoing connections
+"""
 def get_number_of_connections(city):
 	count = len(dictionary[city])
 	for start in dictionary:
@@ -116,6 +157,11 @@ def get_number_of_connections(city):
 			pass
 	return count
 
+"""
+Depth-first search algorithm. Takes in an adjacency list representation of a graph
+as well as the desired start and finish destinations. Returns a set representation of
+all the possible paths between the start and the finish destinations.
+"""
 def dfs_paths(graph, start, goal):
     stack = [(start, [start])]
     while stack:
@@ -126,15 +172,25 @@ def dfs_paths(graph, start, goal):
             else:
                 stack.append((next, path + [next]))
 
+"""
+Determines if there exists a k-hop connection between a start and finish destination, 
+where k <= d. If the k-hop connection exists, one of the paths will be printed out as
+well as the total distance.
+"""
 def has_khop_connection(start, finish, d):
 	all_paths = list(dfs_paths(graph, start, finish))
 	for l in all_paths:
 		length = len(l)
-		if length <= d:
+		if length <= int(d):
 			print_total_distance(l)
 			return True
 	return False
 
+"""
+Determines if there is a connection between two cities start and finish both direct
+and indirect. If a direct or indirect connection is found, the path and the total 
+distance will be printed out.
+"""
 def has_connection(start, finish):
 	all_paths = list(dfs_paths(graph, start, finish))
 	for l in all_paths:
@@ -145,21 +201,27 @@ def has_connection(start, finish):
 			print_total_distance(l)
 			return True
 
-
+"""
+Takes in a path, prints it, and then prints the total distance of that path. This is called
+by both has_khop_connection and has_connection.
+"""
 def print_total_distance(path):
-	print (path)
+	print ("Path ", path)
 	total_distance = 0
 	for i in range(0, (len(path) - 1)):
 		j = i + 1
 		total_distance = total_distance +int(dictionary[path[i]][path[j]])
-	print (total_distance)
+	print ("Total Distance ", total_distance)
 
 
 
-dictionary = {}
-graph = {}
-create_dictionary()
-begin_program()
+"""
+BEGIN PROGRAM
+"""
+dictionary = {} #adjacency matrix representation of the graph
+graph = {} #adjacency list representation of the graph
+create_dictionary() #reads the text file and creates the dictionary
+begin_program() #begins the program and takes in user input
 
 
 """
